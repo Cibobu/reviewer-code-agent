@@ -1,0 +1,14 @@
+{
+  "name": "reviewer-code-agent",
+  "type": "module",
+  "scripts": {
+    "agent:pr": "tsx archetypes/pr-risk-agent/src/agent.ts",
+    "test": "tsx --test archetypes/pr-risk-agent/src/**/*.test.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.22.0",
+    "dotenv": "^17.4.2",
+    "openai": "^6.42.0",
+    "zod": "^4.4.3"
+  }
+}
