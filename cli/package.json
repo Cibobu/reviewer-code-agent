@@ -1,0 +1,14 @@
+{
+  "name": "@foru-workshop/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "foru": "./src/index.ts"
+  },
+  "dependencies": {
+    "@foru-workshop/contracts": "*",
+    "@foru-workshop/grid": "*",
+    "zod": "^3.22.0"
+  }
+}

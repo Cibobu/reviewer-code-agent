@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>PR Risk Scanner — Operating Console</title>
+    <style>
+      :root {
+        --bg: #0b0d10;
+        --panel: #14171c;
+        --panel-2: #1c2026;
+        --border: #2a2f37;
+        --text: #e7ebf0;
+        --muted: #8a93a0;
+        --accent: #6A30C9;
+        --ok: #7ee787;
+        --warn: #f0b76b;
+        --err: #ff7b72;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+        line-height: 1.55;
+      }
+      .wrap { max-width: 960px; margin: 0 auto; padding: 32px 24px 80px; }
+      .tag {
+        font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--accent); margin-bottom: 6px;
+      }
+      h1 { margin: 0 0 8px; font-size: 28px; font-weight: 600; }
+      .sub { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+      .panel {
+        background: var(--panel); border: 1px solid var(--border);
+        border-radius: 12px; padding: 20px; margin-bottom: 16px;
+      }
+      .panel-title {
+        font-size: 12px; font-weight: 600; color: var(--muted);
+        letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 14px;
+      }
+      label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+      input[type="text"], input[type="password"] {
+        width: 100%; padding: 10px 12px; border-radius: 8px;
+        border: 1px solid var(--border); background: var(--panel-2);
+        color: var(--text); font-size: 14px;
+      }
+      input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+      .field { margin-bottom: 14px; }
+      .row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+      .row input[type="checkbox"] { width: auto; }
+      .row label { margin: 0; color: var(--text); }
+      button {
+        background: var(--accent); color: white; border: 0; border-radius: 8px;
+        padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+      }
+      button:disabled { opacity: 0.5; cursor: not-allowed; }
+      button:hover:not(:disabled) { filter: brightness(1.1); }
+      .status { font-size: 13px; color: var(--muted); margin-top: 12px; }
+      .status.ok { color: var(--ok); }
+      .status.err { color: var(--err); }
+      .risk {
+        display: inline-block; padding: 4px 12px; border-radius: 999px;
+        font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+      }
+      .risk.low { background: rgba(126,231,135,0.15); color: var(--ok); }
+      .risk.medium { background: rgba(240,183,107,0.15); color: var(--warn); }
+      .risk.high { background: rgba(255,123,114,0.15); color: var(--err); }
+      .risk.critical { background: rgba(255,123,114,0.3); color: var(--err); }
+      .section { margin-bottom: 16px; }
+      .section h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+      .section p { margin: 0; font-size: 15px; }
+      ul { margin: 0; padding-left: 20px; }
+      li { margin-bottom: 6px; font-size: 14px; }
+      #result { display: none; }
+      #result.show { display: block; }
+      #loading, #error-block { display: none; color: var(--muted); padding: 20px 0; }
+      pre#raw-json {
+        background: var(--panel-2); border: 1px solid var(--border);
+        border-radius: 8px; padding: 12px; overflow: auto;
+        font-family: var(--mono); font-size: 12px; color: var(--muted);
+      }
+      #soul {
+        font-family: var(--mono); font-size: 12px; color: var(--muted);
+        white-space: pre-wrap; max-height: 200px; overflow: auto;
+      }
+      .file-row {
+        font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--border);
+      }
+      .file-row:last-child { border-bottom: 0; }
+      .file-name { font-family: var(--mono); color: var(--text); }
+      .file-meta { color: var(--muted); font-size: 12px; }
+      pre.resolution {
+        background: var(--panel-2); border: 1px solid var(--border);
+        border-radius: 8px; padding: 12px; font-family: var(--mono);
+        font-size: 12px; white-space: pre-wrap; margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <span class="health" id="health-badge">● checking…</span>
+      <div class="tag">Archetype A</div>
+      <h1>PR Risk Scanner</h1>
+      <p class="sub">Analyze GitHub pull requests for bugs, security risks, and missing tests.</p>
+
+      <div class="panel">
+        <div class="panel-title">Input</div>
+        <div class="field">
+          <label for="pr-url">GitHub PR URL</label>
+          <input id="pr-url" type="text" placeholder="https://github.com/owner/repo/pull/123" />
+        </div>
+        <div class="field">
+          <label for="gh-token">GitHub Token (optional — private repos)</label>
+          <input id="gh-token" type="password" placeholder="ghp_…" autocomplete="off" />
+        </div>
+        <div class="row">
+          <input id="use-demo" type="checkbox" />
+          <label for="use-demo">Use demo data (offline — no GitHub API call)</label>
+        </div>
+        <button id="scan-btn">Scan PR</button>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div id="loading">Scanning… this may take a few seconds.</div>
+      <div id="error-block"></div>
+
+      <div id="result">
+        <div class="panel">
+          <div class="panel-title">Report</div>
+          <div class="section">
+            <h3>Risk Level</h3>
+            <span class="risk medium" id="risk-pill">—</span>
+          </div>
+          <div class="section">
+            <h3>Summary</h3>
+            <p id="summary-text">—</p>
+          </div>
+          <div class="section">
+            <h3>Merge Status</h3>
+            <p id="merge-status-text">—</p>
+          </div>
+          <div class="section">
+            <h3>Files Changed</h3>
+            <div id="files-changed-list"></div>
+          </div>
+          <div class="section">
+            <h3>Conflict Notes</h3>
+            <ul id="conflict-list"></ul>
+          </div>
+          <div class="section">
+            <h3>How to Fix Conflicts</h3>
+            <pre class="resolution" id="conflict-resolution">—</pre>
+          </div>
+          <div class="section">
+            <h3>Issues Found</h3>
+            <ul id="issues-list"></ul>
+          </div>
+          <div class="section">
+            <h3>Security Notes</h3>
+            <ul id="security-list"></ul>
+          </div>
+          <div class="section">
+            <h3>Missing Tests</h3>
+            <ul id="tests-list"></ul>
+          </div>
+          <div class="section">
+            <h3>Effect If Merged</h3>
+            <p id="effect-text">—</p>
+          </div>
+          <div class="section">
+            <h3>Recommended Next Action</h3>
+            <p id="action-text">—</p>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Raw JSON</div>
+          <pre id="raw-json"></pre>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">SOUL.md</div>
+        <pre id="soul">loading…</pre>
+      </div>
+    </div>
+
+    <script>
+      const DEMO_DIFF = {
+        title: "Add payment webhook handler",
+        body: "Implements Stripe webhook verification",
+        files: [
+          {
+            filename: "src/webhook.ts",
+            status: "added",
+            additions: 28,
+            deletions: 0,
+            patch:
+              "+ export function handleWebhook(req) {\n" +
+              "+   const secret = 'sk_live_hardcoded';\n" +
+              "+   if (!req.body) return { ok: true };\n" +
+              "+   eval(req.body.payload);\n" +
+              "+ }",
+          },
+          {
+            filename: "src/webhook.test.ts",
+            status: "removed",
+            additions: 0,
+            deletions: 45,
+            patch: "- describe('webhook', () => { ... });",
+          },
+        ],
+      };
+
+      const $ = (id) => document.getElementById(id);
+
+      function fillList(el, items) {
+        el.innerHTML = "";
+        const arr = Array.isArray(items) ? items : [];
+        if (arr.length === 0) {
+          const li = document.createElement("li");
+          li.style.color = "var(--muted)";
+          li.textContent = "(none)";
+          el.appendChild(li);
+          return;
+        }
+        for (const item of arr) {
+          const li = document.createElement("li");
+          li.textContent = item;
+          el.appendChild(li);
+        }
+      }
+
+      function fillFilesChanged(el, files) {
+        el.innerHTML = "";
+        const arr = Array.isArray(files) ? files : [];
+        if (arr.length === 0) {
+          el.innerHTML = '<div class="file-meta">(none)</div>';
+          return;
+        }
+        for (const f of arr) {
+          const row = document.createElement("div");
+          row.className = "file-row";
+          row.innerHTML =
+            `<div class="file-name">${f.filename}</div>` +
+            `<div class="file-meta">${f.status} · +${f.additions ?? 0}/-${f.deletions ?? 0}</div>` +
+            `<div class="file-meta">${f.summary ?? ""}</div>`;
+          el.appendChild(row);
+        }
+      }
+
+      function showReport(data) {
+        $("loading").style.display = "none";
+        $("error-block").style.display = "none";
+        $("result").classList.add("show");
+
+        const level = String(data.riskLevel ?? "medium").toLowerCase();
+        const pill = $("risk-pill");
+        pill.textContent = level;
+        pill.className = "risk " + (["low","medium","high","critical"].includes(level) ? level : "medium");
+
+        $("summary-text").textContent = data.summary ?? "—";
+        $("merge-status-text").textContent = data.mergeStatus ?? "—";
+        fillFilesChanged($("files-changed-list"), data.filesChanged);
+        fillList($("conflict-list"), data.conflictNotes);
+        $("conflict-resolution").textContent = data.conflictResolution ?? "—";
+        fillList($("issues-list"), data.issuesFound);
+        fillList($("security-list"), data.securityNotes);
+        fillList($("tests-list"), data.missingTests);
+        $("effect-text").textContent = data.effectIfMerged ?? "—";
+        $("action-text").textContent = data.recommendedNextAction ?? "—";
+        $("raw-json").textContent = JSON.stringify(data, null, 2);
+      }
+
+      function showError(msg) {
+        $("loading").style.display = "none";
+        $("result").classList.remove("show");
+        $("error-block").style.display = "block";
+        $("error-block").textContent = msg;
+      }
+
+      async function scan() {
+        const prUrl = $("pr-url").value.trim() || "https://github.com/demo/acme-api/pull/42";
+        const githubToken = $("gh-token").value.trim() || undefined;
+        const useDemo = $("use-demo").checked;
+
+        if (githubToken) sessionStorage.setItem("gh-token", githubToken);
+        else sessionStorage.removeItem("gh-token");
+
+        const body = { prUrl };
+        if (githubToken) body.githubToken = githubToken;
+        if (useDemo) body.demoDiff = DEMO_DIFF;
+
+        $("scan-btn").disabled = true;
+        $("loading").style.display = "block";
+        $("error-block").style.display = "none";
+        $("result").classList.remove("show");
+        $("status").textContent = "Scanning…";
+        $("status").className = "status";
+
+        const t0 = performance.now();
+        try {
+          const res = await fetch("/invoke", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          const dur = ((performance.now() - t0) / 1000).toFixed(1);
+          if (!res.ok) {
+            showError(data.error ?? `HTTP ${res.status}`);
+            $("status").textContent = `Failed (${dur}s)`;
+            $("status").className = "status err";
+          } else {
+            showReport(data);
+            $("status").textContent = `Done in ${dur}s`;
+            $("status").className = "status ok";
+          }
+        } catch (err) {
+          showError(String(err));
+          $("status").textContent = "Network error";
+          $("status").className = "status err";
+        } finally {
+          $("scan-btn").disabled = false;
+          $("loading").style.display = "none";
+        }
+      }
+
+      $("scan-btn").addEventListener("click", scan);
+      const saved = sessionStorage.getItem("gh-token");
+      if (saved) $("gh-token").value = saved;
+
+      fetch("/health").then((r) => r.json())
+        .then((j) => ($("health-badge").innerHTML = `<span style="color:var(--ok)">●</span> ${j.role}`))
+        .catch(() => ($("health-badge").innerHTML = '<span style="color:var(--err)">●</span> offline'));
+
+      fetch("/soul").then((r) => r.text())
+        .then((t) => ($("soul").textContent = t))
+        .catch(() => ($("soul").textContent = "(failed to load SOUL.md)"));
+    </script>
+  </body>
+</html>

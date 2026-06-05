@@ -1,14 +1,27 @@
 {
-  "name": "reviewer-code-agent",
-  "type": "module",
+  "name": "foru-grid-workshop-scaffold",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PR Risk Scanner — GitHub PR analysis agent with OpenAI-compatible LLM.",
+  "workspaces": [
+    "shared/*",
+    "cli",
+    "archetypes/*"
+  ],
   "scripts": {
-    "agent:pr": "tsx archetypes/pr-risk-agent/src/agent.ts",
-    "test": "tsx --test archetypes/pr-risk-agent/src/**/*.test.ts"
+    "foru": "tsx cli/src/index.ts",
+    "choose": "tsx cli/src/index.ts choose",
+    "status": "tsx cli/src/index.ts status",
+    "test": "tsx cli/src/index.ts test",
+    "submit": "tsx cli/src/index.ts submit",
+    "calibrate": "tsx --env-file=.env scripts/calibrate.ts"
   },
-  "dependencies": {
-    "tsx": "^4.22.0",
-    "dotenv": "^17.4.2",
-    "openai": "^6.42.0",
-    "zod": "^4.4.3"
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
