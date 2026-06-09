@@ -23,7 +23,10 @@ module.exports = {
     {
       name: "gitguardian-web",
       cwd: path.join(root, "archetypes/C-gitguardian-ai/apps/web"),
-      script: path.join(root, "node_modules/next/dist/bin/next"),
+      script: path.join(
+        root,
+        "archetypes/C-gitguardian-ai/node_modules/next/dist/bin/next",
+      ),
       args: "start -p 3000",
       env: {
         NODE_ENV: "production",

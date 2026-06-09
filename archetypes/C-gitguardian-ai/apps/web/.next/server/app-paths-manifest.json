@@ -1,4 +1,12 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js",
+  "/dashboard/repositories/[id]/reviews/[reviewId]/page": "app/dashboard/repositories/[id]/reviews/[reviewId]/page.js",
+  "/dashboard/repositories/[id]/reviews/page": "app/dashboard/repositories/[id]/reviews/page.js",
+  "/dashboard/repositories/page": "app/dashboard/repositories/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/reviews/[id]/page": "app/reviews/[id]/page.js",
   "/reviews/page": "app/reviews/page.js",
-  "/dashboard/repositories/page": "app/dashboard/repositories/page.js"
+  "/settings/integrations/telegram/page": "app/settings/integrations/telegram/page.js"
 }

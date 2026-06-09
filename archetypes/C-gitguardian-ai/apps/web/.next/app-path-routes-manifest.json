@@ -1,0 +1,12 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/login/page": "/login",
+  "/page": "/",
+  "/dashboard/repositories/[id]/reviews/[reviewId]/page": "/dashboard/repositories/[id]/reviews/[reviewId]",
+  "/dashboard/repositories/[id]/reviews/page": "/dashboard/repositories/[id]/reviews",
+  "/dashboard/repositories/page": "/dashboard/repositories",
+  "/dashboard/page": "/dashboard",
+  "/reviews/[id]/page": "/reviews/[id]",
+  "/reviews/page": "/reviews",
+  "/settings/integrations/telegram/page": "/settings/integrations/telegram"
+}

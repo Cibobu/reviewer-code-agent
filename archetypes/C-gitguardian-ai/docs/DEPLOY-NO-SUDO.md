@@ -88,6 +88,15 @@ export $(grep -v '^#' .env | xargs)
 npm run build -w @gitguardian/web
 ```
 
+Jika `next: not found`, pastikan Next ter-install:
+
+```bash
+ls archetypes/C-gitguardian-ai/node_modules/next/dist/bin/next && echo "Next OK"
+# atau build langsung:
+cd archetypes/C-gitguardian-ai/apps/web
+node ../../node_modules/next/dist/bin/next build
+```
+
 ---
 
 ## 6. PM2
