@@ -377,4 +377,17 @@ worker.on("failed", async (job, err) => {
   }
 });
 
+worker.on("error", (err) => {
+  process.stderr.write(`[worker] BullMQ error: ${err.message}\n`);
+});
+
+process.on("unhandledRejection", (reason) => {
+  process.stderr.write(`[worker] unhandledRejection: ${String(reason)}\n`);
+});
+
+process.on("uncaughtException", (err) => {
+  process.stderr.write(`[worker] uncaughtException: ${err.stack ?? err.message}\n`);
+  process.exit(1);
+});
+
 process.stdout.write("[GitGuardian Worker] listening on webhook-events queue\n");

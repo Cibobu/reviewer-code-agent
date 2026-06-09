@@ -224,7 +224,9 @@ pm2 restart all
 |--------|--------|
 | Login GitHub gagal | Callback URL harus persis sama di GitHub App & `.env` |
 | API 404 dari browser | Pastikan `NEXT_PUBLIC_API_URL=https://nur.foruai.io/api` saat **build** web |
-| Worker tidak jalan | Cek `REDIS_URL` Upstash (`rediss://`) |
+| Worker restart loop | Cluster mode / tsx crash | `exec_mode: fork` di ecosystem; cek `pm2 logs gitguardian-worker --err` |
+| Worker Redis error | `REDIS_URL` salah | Pakai `rediss://` Upstash |
+| Worker tsx not found | Path tsx | `ls node_modules/tsx/dist/cli.mjs` dari root |
 | DB error | Neon URL + `sslmode=require` |
 | Tunnel tidak jalan | `pm2 logs cloudflared` |
 
