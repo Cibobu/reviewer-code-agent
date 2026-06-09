@@ -43,7 +43,8 @@ npm install -g pm2
 
 1. Buat project di [neon.tech](https://neon.tech)
 2. Copy connection string → `DATABASE_URL` di `.env`
-3. Pastikan ada `?sslmode=require`
+3. **Pooler** (`-pooler` di hostname): tambah `&pgbouncer=true`, hapus `channel_binding=require`
+4. **Direct** (tanpa `-pooler`): cukup `?sslmode=require`
 
 ### Upstash (Redis)
 
@@ -222,12 +223,14 @@ pm2 restart all
 
 | Gejala | Solusi |
 |--------|--------|
-| Login GitHub gagal | Callback URL harus persis sama di GitHub App & `.env` |
+| API online lalu error | Port 4000 bentrok / crash bootstrap | `pm2 logs gitguardian-api --err`; tes manual `node --env-file=... dist/main.js` |
+| API `EADDRINUSE` | Proses lama masih pakai port 4000 | `pm2 delete all` lalu start ulang; `ss -tlnp \| grep 4000` |
 | API 404 dari browser | Pastikan `NEXT_PUBLIC_API_URL=https://nur.foruai.io/api` saat **build** web |
 | Worker restart loop | Cluster mode / tsx crash | `exec_mode: fork` di ecosystem; cek `pm2 logs gitguardian-worker --err` |
 | Worker Redis error | `REDIS_URL` salah | Pakai `rediss://` Upstash |
 | Worker tsx not found | Path tsx | `ls node_modules/tsx/dist/cli.mjs` dari root |
-| DB error | Neon URL + `sslmode=require` |
+| DB error / `PostgreSQL connection: Closed` | Neon pooler tanpa `pgbouncer=true` atau `channel_binding=require` | Pooler: `?sslmode=require&pgbouncer=true` — hapus `channel_binding` |
+| DB error (umum) | Neon URL salah | `sslmode=require` |
 | Tunnel tidak jalan | `pm2 logs cloudflared` |
 
 ---

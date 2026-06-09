@@ -20,4 +20,8 @@ async function bootstrap(): Promise<void> {
   process.stdout.write(`[GitGuardian API] http://localhost:${port}/api\n`);
 }
 
-bootstrap();
+bootstrap().catch((err: unknown) => {
+  const message = err instanceof Error ? err.stack ?? err.message : String(err);
+  process.stderr.write(`[GitGuardian API] bootstrap failed: ${message}\n`);
+  process.exit(1);
+});

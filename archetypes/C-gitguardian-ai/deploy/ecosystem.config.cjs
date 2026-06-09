@@ -43,7 +43,12 @@ module.exports = {
       name: "gitguardian-api",
       cwd: path.join(root, "archetypes/C-gitguardian-ai/apps/api"),
       script: "dist/main.js",
+      interpreter: "node",
       node_args: `--env-file=${envFile}`,
+      env: {
+        NODE_ENV: "production",
+      },
+      kill_timeout: 5000,
     },
     {
       ...forkApp,
