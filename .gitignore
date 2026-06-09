@@ -3,5 +3,6 @@ dist/
 .env
 .env.local
 .foru-config.json
+data/
 *.log
 .DS_Store

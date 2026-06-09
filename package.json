@@ -6,7 +6,10 @@
   "workspaces": [
     "shared/*",
     "cli",
-    "archetypes/*"
+    "archetypes/A-head-of-research",
+    "archetypes/B-pr-telegram-notifier",
+    "archetypes/C-gitguardian-ai/apps/*",
+    "archetypes/C-gitguardian-ai/packages/*"
   ],
   "scripts": {
     "foru": "tsx cli/src/index.ts",
@@ -14,10 +17,19 @@
     "status": "tsx cli/src/index.ts status",
     "test": "tsx cli/src/index.ts test",
     "submit": "tsx cli/src/index.ts submit",
-    "calibrate": "tsx --env-file=.env scripts/calibrate.ts"
+    "calibrate": "tsx --env-file=.env scripts/calibrate.ts",
+    "calibrate:b": "tsx --env-file=.env scripts/calibrate-b.ts",
+    "dev:a": "npm run dev -w @foru-workshop/archetype-a",
+    "dev:b": "npm run dev -w @foru-workshop/archetype-b",
+    "dev:c": "npm run build -w @gitguardian/db && node --env-file=.env ./node_modules/.bin/concurrently -n api,web,worker -c blue,green,magenta \"npm run dev -w @gitguardian/api\" \"npm run dev -w @gitguardian/web\" \"npm run dev -w @gitguardian/worker\"",
+    "db:c:push": "node --env-file=.env ./node_modules/.bin/prisma db push --schema=archetypes/C-gitguardian-ai/packages/db/prisma/schema.prisma",
+    "db:c:generate": "node --env-file=.env ./node_modules/.bin/prisma generate --schema=archetypes/C-gitguardian-ai/packages/db/prisma/schema.prisma",
+    "infra:c": "bash scripts/infra-c.sh",
+    "retry:c:webhooks": "node --env-file=.env ./node_modules/.bin/tsx archetypes/C-gitguardian-ai/scripts/retry-failed-webhooks.ts"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "concurrently": "^9.2.1",
     "tsx": "^4.7.0",
     "typescript": "^5.4.0"
   },

@@ -119,6 +119,7 @@ export async function chat(
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(90_000),
   });
 
   if (res.status === 429) throw new RateLimitError(DAILY_CAP);

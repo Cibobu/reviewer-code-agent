@@ -19,6 +19,7 @@ import { ARCHETYPES } from "@foru-workshop/contracts";
 import { InputSchema } from "./contract.js";
 import { handle } from "./handler.js";
 import { buildMcpServer } from "./mcp.js";
+import { GitHubPrError } from "./github.js";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.resolve(HERE, "../public");
@@ -77,12 +78,25 @@ async function handleInvoke(req: IncomingMessage, res: ServerResponse): Promise<
     const input = raw ? JSON.parse(raw) : {};
     const parsed = InputSchema.safeParse(input);
     if (!parsed.success) {
-      sendJson(res, 400, { error: "Invalid input", detail: parsed.error.flatten() });
+      const first = parsed.error.issues[0];
+      sendJson(res, 400, {
+        error: first?.message ?? "Input tidak valid",
+        code: "invalid_input",
+        detail: parsed.error.flatten(),
+      });
       return;
     }
     const output = await handle(parsed.data);
     sendJson(res, 200, output);
   } catch (err) {
+    if (err instanceof GitHubPrError) {
+      sendJson(res, 400, {
+        error: err.message,
+        code: err.code,
+        hint: err.hint,
+      });
+      return;
+    }
     sendJson(res, 500, { error: err instanceof Error ? err.message : String(err) });
   }
 }

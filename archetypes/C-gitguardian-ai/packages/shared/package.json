@@ -1,0 +1,40 @@
+{
+  "name": "@gitguardian/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/crypto.ts",
+  "types": "./src/crypto.ts",
+  "exports": {
+    ".": {
+      "types": "./src/crypto.ts",
+      "import": "./src/crypto.ts",
+      "default": "./src/crypto.ts"
+    },
+    "./crypto": {
+      "types": "./src/crypto.ts",
+      "import": "./src/crypto.ts",
+      "default": "./src/crypto.ts"
+    },
+    "./load-env": {
+      "types": "./src/load-env.ts",
+      "import": "./src/load-env.ts",
+      "default": "./src/load-env.ts"
+    },
+    "./telegram": {
+      "types": "./src/telegram.ts",
+      "import": "./src/telegram.ts",
+      "default": "./src/telegram.ts"
+    },
+    "./telegram-review": {
+      "types": "./src/telegram-review.ts",
+      "import": "./src/telegram-review.ts",
+      "default": "./src/telegram-review.ts"
+    },
+    "./urls": {
+      "types": "./src/urls.ts",
+      "import": "./src/urls.ts",
+      "default": "./src/urls.ts"
+    }
+  }
+}

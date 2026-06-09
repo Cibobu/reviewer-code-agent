@@ -1,0 +1,4 @@
+{
+  "/reviews/page": "app/reviews/page.js",
+  "/dashboard/repositories/page": "app/dashboard/repositories/page.js"
+}

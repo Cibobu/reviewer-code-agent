@@ -1,0 +1,292 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AgentStatus {
+  ACTIVE
+  INACTIVE
+  ERROR
+}
+
+enum WebhookEventStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  DEAD_LETTER
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SLACK
+  DISCORD
+  TELEGRAM
+}
+
+enum NotificationPreference {
+  CRITICAL_ONLY
+  SECURITY_ONLY
+  ALL_ACTIVITIES
+  PR_REVIEWS
+  MERGE_SUMMARIES
+  DEPLOYMENT_RISKS
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+model User {
+  id            String    @id @default(cuid())
+  githubId      String    @unique
+  username      String
+  email         String?
+  avatarUrl     String?
+  accessToken   String    // encrypted at app layer
+  refreshToken  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  repositories  Repository[]
+  sessions      Session[]
+  auditLogs     AuditLog[]
+  telegram      TelegramIntegration?
+  notifications Notification[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  refreshToken String   @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Repository {
+  id              String      @id @default(cuid())
+  userId          String
+  githubRepoId    Int
+  name            String
+  fullName        String
+  description     String?
+  language        String?
+  visibility      String      @default("private")
+  stars           Int         @default(0)
+  forks           Int         @default(0)
+  defaultBranch   String      @default("main")
+  agentStatus     AgentStatus @default(INACTIVE)
+  webhookId       Int?
+  webhookSecret   String?
+  lastScanAt      DateTime?
+  totalPrReviewed Int         @default(0)
+  securityScore   Int         @default(100)
+  githubUpdatedAt DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user           User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  configuration  RepositoryConfiguration?
+  webhookEvents  WebhookEvent[]
+  pullRequests   PullRequest[]
+  commits        Commit[]
+  aiReviews      AIReview[]
+  securityFindings SecurityFinding[]
+
+  @@unique([userId, githubRepoId])
+  @@index([fullName])
+}
+
+model RepositoryConfiguration {
+  id                    String                 @id @default(cuid())
+  repositoryId          String                 @unique
+  notifyCriticalOnly      Boolean                @default(false)
+  notifySecurityOnly      Boolean                @default(false)
+  notifyAllActivities     Boolean                @default(true)
+  batchWindowMinutes      Int                    @default(5)
+  enableEmbeddingsCache   Boolean                @default(true)
+  monitoredEvents         Json                   @default("[]")
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+}
+
+model WebhookEvent {
+  id           String             @id @default(cuid())
+  repositoryId String
+  deliveryId   String             @unique
+  eventType    String
+  action       String?
+  payload      Json
+  status       WebhookEventStatus @default(PENDING)
+  retryCount   Int                @default(0)
+  errorMessage String?
+  processedAt  DateTime?
+  createdAt    DateTime           @default(now())
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@index([repositoryId, status])
+  @@index([createdAt])
+}
+
+model PullRequest {
+  id           String   @id @default(cuid())
+  repositoryId String
+  number       Int
+  title        String
+  author       String
+  authorAvatar String?
+  state        String
+  htmlUrl      String
+  baseBranch   String
+  headBranch   String
+  mergedAt     DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  reviews    AIReview[]
+
+  @@unique([repositoryId, number])
+}
+
+model Commit {
+  id           String   @id @default(cuid())
+  repositoryId String
+  sha          String
+  message      String
+  author       String
+  authorAvatar String?
+  branch       String
+  htmlUrl      String
+  createdAt    DateTime @default(now())
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@unique([repositoryId, sha])
+}
+
+model AIReview {
+  id                String   @id @default(cuid())
+  repositoryId      String
+  pullRequestId     String?
+  webhookEventId    String?
+  changeSummary     String
+  securityScore     Int
+  securitySeverity  Severity
+  impactAnalysis    Json
+  codeQuality       Json
+  contributors      Json
+  recommendations   Json
+  rawDiffHash       String?
+  tokensUsed        Int      @default(0)
+  cached            Boolean  @default(false)
+  createdAt         DateTime @default(now())
+
+  repository   Repository    @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  pullRequest  PullRequest?  @relation(fields: [pullRequestId], references: [id])
+  findings     SecurityFinding[]
+  notifications Notification[]
+
+  @@index([repositoryId, createdAt])
+}
+
+model SecurityFinding {
+  id           String   @id @default(cuid())
+  repositoryId String
+  aiReviewId   String
+  category     String
+  severity     Severity
+  title        String
+  description  String
+  filePath     String?
+  lineHint     String?
+  createdAt    DateTime @default(now())
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  aiReview   AIReview   @relation(fields: [aiReviewId], references: [id], onDelete: Cascade)
+
+  @@index([repositoryId, severity])
+}
+
+model TelegramIntegration {
+  id                     String                 @id @default(cuid())
+  userId                 String                 @unique
+  botTokenEncrypted      String
+  botUsername            String?
+  chatId                 String?
+  isActive               Boolean                @default(false)
+  notificationPreference NotificationPreference @default(SECURITY_ONLY)
+  lastDeliveryStatus     String?
+  lastDeliveryAt         DateTime?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id         String              @id @default(cuid())
+  userId     String
+  aiReviewId String?
+  channel    NotificationChannel
+  title      String
+  body       String
+  read       Boolean             @default(false)
+  delivered  Boolean             @default(false)
+  error      String?
+  createdAt  DateTime            @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aiReview AIReview? @relation(fields: [aiReviewId], references: [id])
+
+  @@index([userId, read])
+}
+
+model AnalysisCache {
+  id           String   @id @default(cuid())
+  repositoryId String
+  filePath     String
+  contentHash  String
+  aiReviewId   String
+  createdAt    DateTime @default(now())
+
+  @@unique([repositoryId, filePath, contentHash])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model ReviewEmbedding {
+  id           String   @id @default(cuid())
+  repositoryId String
+  aiReviewId   String
+  chunk        String
+  embedding    Json
+  createdAt    DateTime @default(now())
+
+  @@index([repositoryId])
+}

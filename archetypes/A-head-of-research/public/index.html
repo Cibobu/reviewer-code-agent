@@ -1,179 +1,277 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>PR Risk Scanner — Operating Console</title>
+    <title>PR Risk Scanner · GitHub</title>
     <style>
       :root {
-        --bg: #0b0d10;
-        --panel: #14171c;
-        --panel-2: #1c2026;
-        --border: #2a2f37;
-        --text: #e7ebf0;
-        --muted: #8a93a0;
+        --bg0: #07080c;
+        --bg1: #0f1219;
+        --panel: rgba(22, 27, 38, 0.85);
+        --panel-border: rgba(255, 255, 255, 0.08);
+        --text: #eef2f8;
+        --muted: #8b95a8;
         --accent: #6A30C9;
-        --ok: #7ee787;
-        --warn: #f0b76b;
-        --err: #ff7b72;
+        --accent2: #9b5cff;
+        --github: #238636;
+        --ok: #3dd68c;
+        --warn: #f0b429;
+        --err: #ff6b6b;
         --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        --shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+        --radius: 14px;
       }
       * { box-sizing: border-box; }
       body {
         margin: 0;
-        background: var(--bg);
+        min-height: 100vh;
         color: var(--text);
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         line-height: 1.55;
+        background:
+          radial-gradient(ellipse 80% 60% at 10% -10%, rgba(106, 48, 201, 0.35), transparent),
+          radial-gradient(ellipse 60% 50% at 100% 0%, rgba(35, 134, 54, 0.12), transparent),
+          linear-gradient(180deg, var(--bg0), var(--bg1));
       }
-      .wrap { max-width: 960px; margin: 0 auto; padding: 32px 24px 80px; }
-      .tag {
-        font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
-        color: var(--accent); margin-bottom: 6px;
+      .wrap { max-width: 920px; margin: 0 auto; padding: 36px 20px 80px; }
+      .topbar {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; margin-bottom: 28px; flex-wrap: wrap;
       }
-      h1 { margin: 0 0 8px; font-size: 28px; font-weight: 600; }
-      .sub { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+      .health {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 13px; color: var(--muted);
+        background: var(--panel); border: 1px solid var(--panel-border);
+        padding: 6px 12px; border-radius: 999px;
+      }
+      .health-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warn); }
+      .health-dot.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+      .hero { margin-bottom: 24px; }
+      .badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+      .badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+        text-transform: uppercase; padding: 5px 10px; border-radius: 999px;
+        border: 1px solid var(--panel-border); background: var(--panel);
+      }
+      .badge.github { color: #7ee787; border-color: rgba(35, 134, 54, 0.4); }
+      .badge.agent { color: var(--accent2); }
+      h1 {
+        margin: 0 0 10px; font-size: clamp(1.6rem, 4vw, 2rem);
+        font-weight: 700; letter-spacing: -0.02em;
+      }
+      .sub { color: var(--muted); font-size: 15px; max-width: 560px; margin: 0; }
       .panel {
-        background: var(--panel); border: 1px solid var(--border);
-        border-radius: 12px; padding: 20px; margin-bottom: 16px;
+        background: var(--panel); backdrop-filter: blur(12px);
+        border: 1px solid var(--panel-border); border-radius: var(--radius);
+        padding: 22px; margin-bottom: 18px; box-shadow: var(--shadow);
       }
       .panel-title {
+        display: flex; align-items: center; gap: 8px;
         font-size: 12px; font-weight: 600; color: var(--muted);
-        letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 14px;
+        letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 16px;
       }
-      label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+      label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+      .input-wrap { position: relative; margin-bottom: 16px; }
+      .input-icon {
+        position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+        color: var(--muted); pointer-events: none;
+      }
       input[type="text"], input[type="password"] {
-        width: 100%; padding: 10px 12px; border-radius: 8px;
-        border: 1px solid var(--border); background: var(--panel-2);
-        color: var(--text); font-size: 14px;
+        width: 100%; padding: 12px 12px 12px 40px; border-radius: 10px;
+        border: 1px solid var(--panel-border); background: rgba(0, 0, 0, 0.25);
+        color: var(--text); font-size: 14px; transition: border-color 0.15s, box-shadow 0.15s;
       }
-      input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-      .field { margin-bottom: 14px; }
-      .row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-      .row input[type="checkbox"] { width: auto; }
-      .row label { margin: 0; color: var(--text); }
-      button {
-        background: var(--accent); color: white; border: 0; border-radius: 8px;
-        padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+      input.invalid { border-color: var(--err); box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.15); }
+      input:focus { outline: none; border-color: var(--accent2); box-shadow: 0 0 0 3px rgba(155, 92, 255, 0.2); }
+      .field-hint { font-size: 12px; color: var(--muted); margin: -8px 0 14px 2px; }
+      .field-hint.err { color: var(--err); }
+      .demo-row {
+        display: flex; align-items: flex-start; gap: 10px;
+        padding: 12px; border-radius: 10px; margin-bottom: 18px;
+        background: rgba(240, 180, 41, 0.08); border: 1px solid rgba(240, 180, 41, 0.2);
       }
-      button:disabled { opacity: 0.5; cursor: not-allowed; }
-      button:hover:not(:disabled) { filter: brightness(1.1); }
-      .status { font-size: 13px; color: var(--muted); margin-top: 12px; }
+      .demo-row input { width: auto; margin-top: 3px; accent-color: var(--accent); }
+      .demo-row label { margin: 0; color: var(--text); font-size: 13px; cursor: pointer; }
+      .demo-row small { display: block; color: var(--muted); margin-top: 4px; font-size: 12px; }
+      .actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+      button.primary {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: white; border: 0; border-radius: 10px;
+        padding: 12px 22px; font-size: 14px; font-weight: 600; cursor: pointer;
+        box-shadow: 0 8px 24px rgba(106, 48, 201, 0.35);
+        transition: transform 0.12s, filter 0.12s;
+      }
+      button.primary:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.06); }
+      button.primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+      .status { font-size: 13px; color: var(--muted); }
       .status.ok { color: var(--ok); }
       .status.err { color: var(--err); }
+      .spinner-wrap {
+        display: none; align-items: center; gap: 12px;
+        padding: 20px; color: var(--muted); font-size: 14px;
+      }
+      .spinner-wrap.show { display: flex; }
+      .spinner {
+        width: 22px; height: 22px; border: 2px solid var(--panel-border);
+        border-top-color: var(--accent2); border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
       .risk {
-        display: inline-block; padding: 4px 12px; border-radius: 999px;
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 14px; border-radius: 999px;
         font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
       }
-      .risk.low { background: rgba(126,231,135,0.15); color: var(--ok); }
-      .risk.medium { background: rgba(240,183,107,0.15); color: var(--warn); }
-      .risk.high { background: rgba(255,123,114,0.15); color: var(--err); }
-      .risk.critical { background: rgba(255,123,114,0.3); color: var(--err); }
-      .section { margin-bottom: 16px; }
-      .section h3 { margin: 0 0 8px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+      .risk.low { background: rgba(61, 214, 140, 0.15); color: var(--ok); }
+      .risk.medium { background: rgba(240, 180, 41, 0.15); color: var(--warn); }
+      .risk.high, .risk.critical { background: rgba(255, 107, 107, 0.18); color: var(--err); }
+      .section { margin-bottom: 18px; }
+      .section h3 {
+        display: flex; align-items: center; gap: 6px;
+        margin: 0 0 8px; font-size: 12px; color: var(--muted);
+        text-transform: uppercase; letter-spacing: 0.05em;
+      }
       .section p { margin: 0; font-size: 15px; }
       ul { margin: 0; padding-left: 20px; }
       li { margin-bottom: 6px; font-size: 14px; }
-      #result { display: none; }
+      #result { display: none; animation: fadeIn 0.35s ease; }
       #result.show { display: block; }
-      #loading, #error-block { display: none; color: var(--muted); padding: 20px 0; }
-      pre#raw-json {
-        background: var(--panel-2); border: 1px solid var(--border);
-        border-radius: 8px; padding: 12px; overflow: auto;
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+      pre#raw-json, pre.resolution, #soul {
+        background: rgba(0, 0, 0, 0.3); border: 1px solid var(--panel-border);
+        border-radius: 10px; padding: 12px; overflow: auto;
         font-family: var(--mono); font-size: 12px; color: var(--muted);
       }
-      #soul {
-        font-family: var(--mono); font-size: 12px; color: var(--muted);
-        white-space: pre-wrap; max-height: 200px; overflow: auto;
-      }
-      .file-row {
-        font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--border);
-      }
+      #soul { white-space: pre-wrap; max-height: 180px; }
+      .file-row { font-size: 13px; padding: 10px 0; border-bottom: 1px solid var(--panel-border); }
       .file-row:last-child { border-bottom: 0; }
       .file-name { font-family: var(--mono); color: var(--text); }
       .file-meta { color: var(--muted); font-size: 12px; }
-      pre.resolution {
-        background: var(--panel-2); border: 1px solid var(--border);
-        border-radius: 8px; padding: 12px; font-family: var(--mono);
-        font-size: 12px; white-space: pre-wrap; margin: 0;
+      /* Error modal */
+      .modal-backdrop {
+        display: none; position: fixed; inset: 0; z-index: 100;
+        background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(4px);
+        align-items: center; justify-content: center; padding: 20px;
       }
+      .modal-backdrop.show { display: flex; animation: fadeIn 0.2s ease; }
+      .modal {
+        width: min(440px, 100%); background: #161b26;
+        border: 1px solid rgba(255, 107, 107, 0.35); border-radius: 16px;
+        padding: 24px; box-shadow: var(--shadow);
+      }
+      .modal-icon {
+        width: 48px; height: 48px; border-radius: 12px;
+        background: rgba(255, 107, 107, 0.12); color: var(--err);
+        display: flex; align-items: center; justify-content: center; margin-bottom: 14px;
+      }
+      .modal h2 { margin: 0 0 8px; font-size: 18px; }
+      .modal p { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+      .modal .hint {
+        margin: 12px 0 18px; padding: 10px 12px; border-radius: 8px;
+        background: rgba(255, 255, 255, 0.04); font-size: 13px; color: var(--text);
+        border-left: 3px solid var(--accent2);
+      }
+      .modal button {
+        width: 100%; padding: 11px; border: 0; border-radius: 10px;
+        background: var(--panel-border); color: var(--text);
+        font-weight: 600; cursor: pointer;
+      }
+      .modal button:hover { background: rgba(255, 255, 255, 0.12); }
+      .icon { width: 18px; height: 18px; flex-shrink: 0; }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <span class="health" id="health-badge">● checking…</span>
-      <div class="tag">Archetype A</div>
-      <h1>PR Risk Scanner</h1>
-      <p class="sub">Analyze GitHub pull requests for bugs, security risks, and missing tests.</p>
-
-      <div class="panel">
-        <div class="panel-title">Input</div>
-        <div class="field">
-          <label for="pr-url">GitHub PR URL</label>
-          <input id="pr-url" type="text" placeholder="https://github.com/owner/repo/pull/123" />
+      <div class="topbar">
+        <div class="badge-row">
+          <span class="badge github">
+            <svg class="icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.18.82.63-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.51-1.04 2.18-.82 2.18-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            GitHub PR only
+          </span>
+          <span class="badge agent">Archetype A</span>
         </div>
-        <div class="field">
-          <label for="gh-token">GitHub Token (optional — private repos)</label>
-          <input id="gh-token" type="password" placeholder="ghp_…" autocomplete="off" />
-        </div>
-        <div class="row">
-          <input id="use-demo" type="checkbox" />
-          <label for="use-demo">Use demo data (offline — no GitHub API call)</label>
-        </div>
-        <button id="scan-btn">Scan PR</button>
-        <div class="status" id="status"></div>
+        <span class="health" id="health-badge"><span class="health-dot" id="health-dot"></span><span id="health-text">checking…</span></span>
       </div>
 
-      <div id="loading">Scanning… this may take a few seconds.</div>
-      <div id="error-block"></div>
+      <div class="hero">
+        <h1>PR Risk Scanner</h1>
+        <p class="sub">Review otomatis Pull Request GitHub — deteksi bug, risiko keamanan, tes yang hilang, dan status merge.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          Scan Pull Request
+        </div>
+
+        <label for="pr-url">URL Pull Request GitHub</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          </span>
+          <input id="pr-url" type="text" placeholder="https://github.com/owner/repo/pull/123" autocomplete="url" />
+        </div>
+        <p class="field-hint" id="url-hint">Hanya link PR dari github.com — contoh: github.com/facebook/react/pull/12345</p>
+
+        <label for="gh-token">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          GitHub Token (opsional — repo private)
+        </label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </span>
+          <input id="gh-token" type="password" placeholder="ghp_…" autocomplete="off" />
+        </div>
+
+        <div class="demo-row">
+          <input id="use-demo" type="checkbox" />
+          <label for="use-demo">
+            Mode demo (workshop)
+            <small>Tidak memanggil GitHub API — pakai data contoh. URL tetap harus format GitHub PR.</small>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="scan-btn" type="button">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            Scan PR
+          </button>
+          <span class="status" id="status"></span>
+        </div>
+      </div>
+
+      <div class="spinner-wrap" id="loading">
+        <div class="spinner"></div>
+        <span>Menganalisis PR… biasanya 5–15 detik.</span>
+      </div>
 
       <div id="result">
         <div class="panel">
-          <div class="panel-title">Report</div>
+          <div class="panel-title">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+            Laporan Review
+          </div>
           <div class="section">
-            <h3>Risk Level</h3>
+            <h3>
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Risk Level
+            </h3>
             <span class="risk medium" id="risk-pill">—</span>
           </div>
-          <div class="section">
-            <h3>Summary</h3>
-            <p id="summary-text">—</p>
-          </div>
-          <div class="section">
-            <h3>Merge Status</h3>
-            <p id="merge-status-text">—</p>
-          </div>
-          <div class="section">
-            <h3>Files Changed</h3>
-            <div id="files-changed-list"></div>
-          </div>
-          <div class="section">
-            <h3>Conflict Notes</h3>
-            <ul id="conflict-list"></ul>
-          </div>
-          <div class="section">
-            <h3>How to Fix Conflicts</h3>
-            <pre class="resolution" id="conflict-resolution">—</pre>
-          </div>
-          <div class="section">
-            <h3>Issues Found</h3>
-            <ul id="issues-list"></ul>
-          </div>
-          <div class="section">
-            <h3>Security Notes</h3>
-            <ul id="security-list"></ul>
-          </div>
-          <div class="section">
-            <h3>Missing Tests</h3>
-            <ul id="tests-list"></ul>
-          </div>
-          <div class="section">
-            <h3>Effect If Merged</h3>
-            <p id="effect-text">—</p>
-          </div>
-          <div class="section">
-            <h3>Recommended Next Action</h3>
-            <p id="action-text">—</p>
-          </div>
+          <div class="section"><h3>Summary</h3><p id="summary-text">—</p></div>
+          <div class="section"><h3>Merge Status</h3><p id="merge-status-text">—</p></div>
+          <div class="section"><h3>Files Changed</h3><div id="files-changed-list"></div></div>
+          <div class="section"><h3>Conflict Notes</h3><ul id="conflict-list"></ul></div>
+          <div class="section"><h3>How to Fix Conflicts</h3><pre class="resolution" id="conflict-resolution">—</pre></div>
+          <div class="section"><h3>Issues Found</h3><ul id="issues-list"></ul></div>
+          <div class="section"><h3>Security Notes</h3><ul id="security-list"></ul></div>
+          <div class="section"><h3>Missing Tests</h3><ul id="tests-list"></ul></div>
+          <div class="section"><h3>Effect If Merged</h3><p id="effect-text">—</p></div>
+          <div class="section"><h3>Recommended Next Action</h3><p id="action-text">—</p></div>
         </div>
         <div class="panel">
           <div class="panel-title">Raw JSON</div>
@@ -187,7 +285,21 @@
       </div>
     </div>
 
+    <div class="modal-backdrop" id="error-modal" role="dialog" aria-modal="true">
+      <div class="modal">
+        <div class="modal-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        </div>
+        <h2 id="modal-title">Scan gagal</h2>
+        <p id="modal-message">—</p>
+        <div class="hint" id="modal-hint" style="display:none"></div>
+        <button type="button" id="modal-close">Tutup</button>
+      </div>
+    </div>
+
     <script>
+      const GITHUB_PR_RE = /^https:\/\/(www\.)?github\.com\/[^/]+\/[^/]+\/pull\/\d+\/?$/i;
+
       const DEMO_DIFF = {
         title: "Add payment webhook handler",
         body: "Implements Stripe webhook verification",
@@ -200,7 +312,6 @@
             patch:
               "+ export function handleWebhook(req) {\n" +
               "+   const secret = 'sk_live_hardcoded';\n" +
-              "+   if (!req.body) return { ok: true };\n" +
               "+   eval(req.body.payload);\n" +
               "+ }",
           },
@@ -216,10 +327,63 @@
 
       const $ = (id) => document.getElementById(id);
 
+      function validatePrUrl(url) {
+        if (!url.trim()) {
+          return { ok: false, message: "URL PR wajib diisi.", hint: "Salin URL dari tab Pull Request di GitHub." };
+        }
+        try {
+          new URL(url);
+        } catch {
+          return { ok: false, message: "URL tidak valid.", hint: "Pastikan diawali https://" };
+        }
+        if (!GITHUB_PR_RE.test(url.trim())) {
+          if (/gitlab|bitbucket|gitea/i.test(url)) {
+            return {
+              ok: false,
+              message: "Hanya Pull Request GitHub yang didukung.",
+              hint: "Agent ini fokus review PR dari github.com saja.",
+            };
+          }
+          return {
+            ok: false,
+            message: "Format URL PR salah.",
+            hint: "Gunakan: https://github.com/owner/repo/pull/123",
+          };
+        }
+        return { ok: true };
+      }
+
+      function setUrlFieldValid(valid, message) {
+        const input = $("pr-url");
+        const hint = $("url-hint");
+        input.classList.toggle("invalid", !valid);
+        hint.textContent = valid
+          ? "Hanya link PR dari github.com — contoh: github.com/facebook/react/pull/12345"
+          : message;
+        hint.classList.toggle("err", !valid);
+      }
+
+      function showErrorModal(title, message, hint) {
+        $("modal-title").textContent = title;
+        $("modal-message").textContent = message;
+        const hintEl = $("modal-hint");
+        if (hint) {
+          hintEl.textContent = hint;
+          hintEl.style.display = "block";
+        } else {
+          hintEl.style.display = "none";
+        }
+        $("error-modal").classList.add("show");
+      }
+
+      function closeModal() {
+        $("error-modal").classList.remove("show");
+      }
+
       function fillList(el, items) {
         el.innerHTML = "";
         const arr = Array.isArray(items) ? items : [];
-        if (arr.length === 0) {
+        if (!arr.length) {
           const li = document.createElement("li");
           li.style.color = "var(--muted)";
           li.textContent = "(none)";
@@ -236,7 +400,7 @@
       function fillFilesChanged(el, files) {
         el.innerHTML = "";
         const arr = Array.isArray(files) ? files : [];
-        if (arr.length === 0) {
+        if (!arr.length) {
           el.innerHTML = '<div class="file-meta">(none)</div>';
           return;
         }
@@ -252,8 +416,7 @@
       }
 
       function showReport(data) {
-        $("loading").style.display = "none";
-        $("error-block").style.display = "none";
+        $("loading").classList.remove("show");
         $("result").classList.add("show");
 
         const level = String(data.riskLevel ?? "medium").toLowerCase();
@@ -274,17 +437,18 @@
         $("raw-json").textContent = JSON.stringify(data, null, 2);
       }
 
-      function showError(msg) {
-        $("loading").style.display = "none";
-        $("result").classList.remove("show");
-        $("error-block").style.display = "block";
-        $("error-block").textContent = msg;
-      }
-
       async function scan() {
-        const prUrl = $("pr-url").value.trim() || "https://github.com/demo/acme-api/pull/42";
+        const prUrl = $("pr-url").value.trim();
         const githubToken = $("gh-token").value.trim() || undefined;
         const useDemo = $("use-demo").checked;
+
+        const check = validatePrUrl(prUrl);
+        if (!check.ok) {
+          setUrlFieldValid(false, check.message);
+          showErrorModal("URL PR salah", check.message, check.hint);
+          return;
+        }
+        setUrlFieldValid(true);
 
         if (githubToken) sessionStorage.setItem("gh-token", githubToken);
         else sessionStorage.removeItem("gh-token");
@@ -294,8 +458,7 @@
         if (useDemo) body.demoDiff = DEMO_DIFF;
 
         $("scan-btn").disabled = true;
-        $("loading").style.display = "block";
-        $("error-block").style.display = "none";
+        $("loading").classList.add("show");
         $("result").classList.remove("show");
         $("status").textContent = "Scanning…";
         $("status").className = "status";
@@ -309,32 +472,52 @@
           });
           const data = await res.json();
           const dur = ((performance.now() - t0) / 1000).toFixed(1);
+
           if (!res.ok) {
-            showError(data.error ?? `HTTP ${res.status}`);
-            $("status").textContent = `Failed (${dur}s)`;
+            const title =
+              data.code === "not_found" ? "PR tidak ditemukan" :
+              data.code === "invalid_url" || data.code === "invalid_input" ? "URL PR salah" :
+              data.code === "auth" || data.code === "forbidden" ? "Akses GitHub ditolak" :
+              "Scan gagal";
+            showErrorModal(title, data.error ?? `HTTP ${res.status}`, data.hint);
+            $("status").textContent = `Gagal (${dur}s)`;
             $("status").className = "status err";
           } else {
             showReport(data);
-            $("status").textContent = `Done in ${dur}s`;
+            $("status").textContent = `Selesai · ${dur}s`;
             $("status").className = "status ok";
           }
         } catch (err) {
-          showError(String(err));
+          showErrorModal("Koneksi gagal", String(err), "Periksa server masih berjalan.");
           $("status").textContent = "Network error";
           $("status").className = "status err";
         } finally {
           $("scan-btn").disabled = false;
-          $("loading").style.display = "none";
+          $("loading").classList.remove("show");
         }
       }
 
       $("scan-btn").addEventListener("click", scan);
+      $("modal-close").addEventListener("click", closeModal);
+      $("error-modal").addEventListener("click", (e) => {
+        if (e.target === $("error-modal")) closeModal();
+      });
+      $("pr-url").addEventListener("input", () => {
+        const v = $("pr-url").value.trim();
+        if (!v) { setUrlFieldValid(true); return; }
+        const c = validatePrUrl(v);
+        setUrlFieldValid(c.ok, c.ok ? "" : c.message);
+      });
+
       const saved = sessionStorage.getItem("gh-token");
       if (saved) $("gh-token").value = saved;
 
       fetch("/health").then((r) => r.json())
-        .then((j) => ($("health-badge").innerHTML = `<span style="color:var(--ok)">●</span> ${j.role}`))
-        .catch(() => ($("health-badge").innerHTML = '<span style="color:var(--err)">●</span> offline'));
+        .then((j) => {
+          $("health-dot").classList.add("ok");
+          $("health-text").textContent = j.role ?? "online";
+        })
+        .catch(() => { $("health-text").textContent = "offline"; });
 
       fetch("/soul").then((r) => r.text())
         .then((t) => ($("soul").textContent = t))

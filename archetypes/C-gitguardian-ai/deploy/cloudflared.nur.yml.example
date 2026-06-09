@@ -1,0 +1,15 @@
+# Cloudflare Tunnel — HTTPS untuk nur.foruai.io tanpa sudo/Nginx
+# Docs: docs/DEPLOY-NO-SUDO.md
+#
+# Setelah `cloudflared tunnel create gitguardian`:
+#   cloudflared tunnel route dns gitguardian nur.foruai.io
+# Jalankan:
+#   cloudflared tunnel --config ~/cloudflared-gitguardian.yml run gitguardian
+
+tunnel: TUNNEL_UUID
+credentials-file: /home/nur/.cloudflared/TUNNEL_UUID.json
+
+ingress:
+  - hostname: nur.foruai.io
+    service: http://127.0.0.1:3000
+  - service: http_status:404

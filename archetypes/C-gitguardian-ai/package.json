@@ -1,0 +1,23 @@
+{
+  "name": "gitguardian-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GitGuardian AI — GitHub monitoring & AI code review SaaS",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "node --env-file=../../.env ../../node_modules/.bin/concurrently -n api,web,worker -c blue,green,magenta \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:worker\"",
+    "dev:api": "npm run dev -w @gitguardian/api",
+    "dev:web": "npm run dev -w @gitguardian/web",
+    "dev:worker": "npm run dev -w @gitguardian/worker",
+    "build": "npm run build -w @gitguardian/db && npm run build -w @gitguardian/api && npm run build -w @gitguardian/worker && npm run build -w @gitguardian/web",
+    "db:generate": "npm run generate -w @gitguardian/db",
+    "db:migrate": "npm run migrate -w @gitguardian/db",
+    "db:push": "npm run push -w @gitguardian/db"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

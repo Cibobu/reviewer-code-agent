@@ -48,8 +48,7 @@ function normalizeFilesChanged(val: unknown): z.infer<typeof FileChangedSchema>[
   });
 }
 
-/** Strict output shape — used for TypeScript types and final validation. */
-const PrScannerOutputCoreSchema = z.object({
+export const PrScannerOutputCoreSchema = z.object({
   summary: z.string(),
   riskLevel: z.enum(RISK_LEVELS),
   mergeStatus: z.string(),
@@ -86,8 +85,57 @@ export const PrScannerOutputSchema = z.preprocess(
   PrScannerOutputCoreSchema,
 );
 
+/** GitHub Pull Request URL validation (Agent A — GitHub PR only). */
+export function validateGitHubPrUrl(
+  url: string,
+): { valid: true } | { valid: false; message: string } {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return {
+      valid: false,
+      message:
+        "URL tidak valid. Gunakan format: https://github.com/owner/repo/pull/123",
+    };
+  }
+
+  const host = parsed.hostname.toLowerCase();
+  const allowedHost = process.env.GITHUB_HOST?.toLowerCase();
+  const isGithub =
+    host === "github.com" ||
+    host === "www.github.com" ||
+    (allowedHost != null && host === allowedHost);
+
+  if (!isGithub) {
+    return {
+      valid: false,
+      message:
+        "Hanya Pull Request dari GitHub yang didukung (github.com/owner/repo/pull/N).",
+    };
+  }
+
+  if (!/^\/[^/]+\/[^/]+\/pull\/\d+\/?$/i.test(parsed.pathname)) {
+    return {
+      valid: false,
+      message:
+        "Format URL PR salah. Contoh benar: https://github.com/facebook/react/pull/12345",
+    };
+  }
+
+  return { valid: true };
+}
+
 export const PrScannerInputSchema = z.object({
-  prUrl: z.string().url(),
+  prUrl: z
+    .string()
+    .url("URL tidak valid — harus diawali https://")
+    .superRefine((url, ctx) => {
+      const check = validateGitHubPrUrl(url);
+      if (!check.valid) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: check.message });
+      }
+    }),
   githubToken: z.string().optional(),
   /** Skip GitHub API — use synthetic demo diff (offline / workshop demo) */
   demoDiff: z

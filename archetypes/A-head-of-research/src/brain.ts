@@ -5,7 +5,7 @@
 import { z } from "zod";
 import { chatJson, loadSoul, RateLimitError } from "@foru-workshop/llm";
 import { OutputSchema, type Input, type Output } from "./contract.js";
-import { demoToPayload, fetchPullRequest } from "./github.js";
+import { demoToPayload, fetchPullRequest, GitHubPrError } from "./github.js";
 import { enrichOutput } from "./enrich.js";
 import { fallback } from "./fallback.js";
 
@@ -23,6 +23,7 @@ export async function brain(input: Input): Promise<Output> {
       );
     }
   } catch (err) {
+    if (err instanceof GitHubPrError) throw err;
     return fallback(input, err instanceof Error ? err.message : String(err));
   }
 

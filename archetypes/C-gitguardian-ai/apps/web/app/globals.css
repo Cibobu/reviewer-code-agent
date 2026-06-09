@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-background text-slate-100 antialiased;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.18), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(192, 132, 252, 0.08), transparent);
+}
+
+@layer components {
+  .card-soft {
+    @apply bg-card/90 backdrop-blur-sm border border-violet-500/10 rounded-2xl shadow-card-soft;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm transition-all duration-200;
+  }
+
+  .nav-link-active {
+    @apply bg-violet-500/10 text-violet-200 font-medium shadow-glow-sm border border-violet-400/20;
+  }
+
+  .nav-link-idle {
+    @apply text-slate-400 hover:bg-violet-500/10 hover:text-violet-100 border border-transparent;
+  }
+
+  .btn-soft {
+    @apply rounded-2xl font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98];
+  }
+}

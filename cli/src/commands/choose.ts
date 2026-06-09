@@ -27,8 +27,9 @@ export async function chooseCommand(arg?: string): Promise<void> {
     arg && isArchetypeCode(arg.toUpperCase()) ? (arg.toUpperCase() as ArchetypeCode) : "A";
 
   const meta = ARCHETYPES[code];
+  const defaultName = code === "B" ? "GitHub Review Bot" : "PR Risk Scanner";
   const agentName = await prompt(
-    `Agent name (max 60 chars) [PR Risk Scanner]: `,
+    `Agent name (max 60 chars) [${defaultName}]: `,
   );
   const description = await prompt(
     "One-line description (max 160 chars): ",
@@ -36,7 +37,7 @@ export async function chooseCommand(arg?: string): Promise<void> {
 
   await writeConfig({
     archetype: code,
-    agentName: agentName || "PR Risk Scanner",
+    agentName: agentName || defaultName,
     description: description || `${meta.role} — ${meta.problem}`,
     createdAt: new Date().toISOString(),
   });
