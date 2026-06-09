@@ -23,10 +23,20 @@ module.exports = {
     {
       name: "gitguardian-web",
       cwd: path.join(root, "archetypes/C-gitguardian-ai/apps/web"),
-      script: path.join(
-        root,
-        "archetypes/C-gitguardian-ai/node_modules/next/dist/bin/next",
-      ),
+      script: (() => {
+        const candidates = [
+          path.join(root, "archetypes/C-gitguardian-ai/node_modules/next/dist/bin/next"),
+          path.join(root, "archetypes/C-gitguardian-ai/apps/web/node_modules/next/dist/bin/next"),
+          path.join(root, "node_modules/next/dist/bin/next"),
+        ];
+        const found = candidates.find((p) => require("fs").existsSync(p));
+        if (!found) {
+          throw new Error(
+            "next binary not found — run: bash scripts/install-c-web.sh",
+          );
+        }
+        return found;
+      })(),
       args: "start -p 3000",
       env: {
         NODE_ENV: "production",

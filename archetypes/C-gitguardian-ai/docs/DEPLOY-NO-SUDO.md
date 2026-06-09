@@ -78,6 +78,10 @@ Isi juga: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `LLM_API_KEY`.
 cd ~/reviewer-code-agent
 npm install
 
+# Pastikan Next.js ter-install (wajib sebelum build web)
+npm install -w @gitguardian/web
+ls archetypes/C-gitguardian-ai/node_modules/next/dist/bin/next && echo "Next OK"
+
 npm run db:c:push
 
 npm run build -w @gitguardian/db

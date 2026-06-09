@@ -24,7 +24,8 @@
     "dev:c": "npm run build -w @gitguardian/db && node --env-file=.env ./node_modules/.bin/concurrently -n api,web,worker -c blue,green,magenta \"npm run dev -w @gitguardian/api\" \"npm run dev -w @gitguardian/web\" \"npm run dev -w @gitguardian/worker\"",
     "db:c:push": "node --env-file=.env ./node_modules/.bin/prisma db push --schema=archetypes/C-gitguardian-ai/packages/db/prisma/schema.prisma",
     "db:c:generate": "node --env-file=.env ./node_modules/.bin/prisma generate --schema=archetypes/C-gitguardian-ai/packages/db/prisma/schema.prisma",
-    "build:c:web": "node --env-file=.env ./archetypes/C-gitguardian-ai/node_modules/next/dist/bin/next build ./archetypes/C-gitguardian-ai/apps/web",
+    "build:c:web": "bash scripts/build-c-web.sh",
+    "install:c:web": "bash scripts/install-c-web.sh",
     "build:c": "npm run db:c:generate && npm run build -w @gitguardian/db && npm run build -w @gitguardian/api && npm run build:c:web",
     "infra:c": "bash scripts/infra-c.sh",
     "retry:c:webhooks": "node --env-file=.env ./node_modules/.bin/tsx archetypes/C-gitguardian-ai/scripts/retry-failed-webhooks.ts"
