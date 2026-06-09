@@ -76,13 +76,16 @@ Isi juga: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `LLM_API_KEY`.
 
 ```bash
 cd ~/reviewer-code-agent
-npm install
+npm install --legacy-peer-deps
 
 # Pastikan Next.js ter-install (wajib sebelum build web)
 npm install -w @gitguardian/web --legacy-peer-deps
 ls archetypes/C-gitguardian-ai/node_modules/next/dist/bin/next 2>/dev/null \
   || ls archetypes/C-gitguardian-ai/apps/web/node_modules/next/dist/bin/next
 ```
+
+**Jangan** `npm install` hanya di `apps/web` — akan error `@foru-workshop/llm` 404
+(package lokal di `shared/llm`, bukan di npm registry).
 
 Jika `ERESOLVE` / NestJS conflict: pastikan tidak ada edit manual di `apps/api/package.json`, lalu:
 
