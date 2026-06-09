@@ -79,8 +79,19 @@ cd ~/reviewer-code-agent
 npm install
 
 # Pastikan Next.js ter-install (wajib sebelum build web)
-npm install -w @gitguardian/web
-ls archetypes/C-gitguardian-ai/node_modules/next/dist/bin/next && echo "Next OK"
+npm install -w @gitguardian/web --legacy-peer-deps
+ls archetypes/C-gitguardian-ai/node_modules/next/dist/bin/next 2>/dev/null \
+  || ls archetypes/C-gitguardian-ai/apps/web/node_modules/next/dist/bin/next
+```
+
+Jika `ERESOLVE` / NestJS conflict: pastikan tidak ada edit manual di `apps/api/package.json`, lalu:
+
+```bash
+git checkout -- archetypes/C-gitguardian-ai/apps/api/package.json package.json
+npm install --legacy-peer-deps
+```
+
+File `.npmrc` di root (`legacy-peer-deps=true`) mencegah conflict peer deps di server.
 
 npm run db:c:push
 

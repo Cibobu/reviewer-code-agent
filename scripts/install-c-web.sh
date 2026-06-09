@@ -20,14 +20,24 @@ if [[ -x "$LOCAL" ]]; then
   exit 0
 fi
 
-echo "Next not found — installing web dependencies in apps/web ..."
+echo "Next not found — installing @gitguardian/web dependencies ..."
+
+# Prefer workspace install from root (respects package-lock when present)
+if npm install -w @gitguardian/web --legacy-peer-deps; then
+  if [[ -x "$NESTED" ]] || [[ -x "$LOCAL" ]]; then
+    [[ -x "$NESTED" ]] && echo "Next OK (nested): $NESTED" && exit 0
+    [[ -x "$LOCAL" ]] && echo "Next OK (apps/web): $LOCAL" && exit 0
+  fi
+fi
+
+echo "Workspace install did not place next — installing directly in apps/web ..."
 cd "$WEB"
-npm install
+npm install --legacy-peer-deps --no-workspaces 2>/dev/null || npm install --legacy-peer-deps
 
 if [[ -x "$LOCAL" ]]; then
   echo "Next OK (apps/web): $LOCAL"
   exit 0
 fi
 
-echo "ERROR: next still missing after npm install in apps/web" >&2
+echo "ERROR: next still missing after install" >&2
 exit 1
