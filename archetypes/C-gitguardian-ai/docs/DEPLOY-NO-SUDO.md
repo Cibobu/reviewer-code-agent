@@ -85,16 +85,23 @@ npm run build -w @gitguardian/api
 
 # NEXT_PUBLIC_* harus ada saat build web:
 export $(grep -v '^#' .env | xargs)
-npm run build -w @gitguardian/web
+npm run build:c:web
+```
+
+`build:c:web` memakai path penuh ke binary Next (tidak bergantung `next` di PATH).
+
+Alternatif jika `package.json` web belum ter-update di server:
+
+```bash
+cd ~/reviewer-code-agent
+export $(grep -v '^#' .env | xargs)
+node archetypes/C-gitguardian-ai/node_modules/next/dist/bin/next build archetypes/C-gitguardian-ai/apps/web
 ```
 
 Jika `next: not found`, pastikan Next ter-install:
 
 ```bash
 ls archetypes/C-gitguardian-ai/node_modules/next/dist/bin/next && echo "Next OK"
-# atau build langsung:
-cd archetypes/C-gitguardian-ai/apps/web
-node ../../node_modules/next/dist/bin/next build
 ```
 
 ---
